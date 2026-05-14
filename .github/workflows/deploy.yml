@@ -51,7 +51,6 @@ jobs:
           script: |
             cd /home/deploy/qiaopi-generator
             echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY_PRODUCTION }}" > .env
-            docker network create app-network >/dev/null 2>&1 || true
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose pull
+            docker compose up -d --remove-orphans
             docker image prune -f

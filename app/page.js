@@ -122,7 +122,7 @@ export default function Home() {
         length: form.length,
         attachmentType: form.attachmentType,
       });
-      const response = await fetch("/api/generate-letter", {
+      const response = await fetch("/qiaopi/api/generate-letter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
