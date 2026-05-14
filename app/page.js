@@ -152,13 +152,17 @@ export default function Home() {
 
   function saveHistoryEntry(input, result) {
     const entry = {
-      id: crypto.randomUUID(),
+      id: createHistoryId(),
       createdAt: new Date().toISOString(),
       form: { ...input },
       letter: removeDebugData(result),
     };
     const nextHistory = [entry, ...readStoredHistory()];
     persistHistory(nextHistory);
+  }
+
+  function createHistoryId() {
+    return `history-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   }
 
   async function copyText() {
