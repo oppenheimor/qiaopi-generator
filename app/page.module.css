@@ -275,7 +275,8 @@
 
 .submitButton,
 .envelope button,
-.actions button {
+.actions button,
+.actionLink {
   min-height: 46px;
   border: 1px solid #7d221b;
   border-radius: 0;
@@ -285,6 +286,12 @@
   font-weight: 700;
   cursor: pointer;
   transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.actionLink {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
 }
 
 .submitButton {
@@ -312,8 +319,21 @@
 
 .submitButton:not(:disabled):hover,
 .envelope button:hover,
-.actions button:hover {
+.actions button:hover,
+.actionLink:hover {
   background: #5c1814;
+}
+
+.historyLink {
+  color: #7d221b;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.historyLink:hover {
+  text-decoration: underline;
 }
 
 .error {
@@ -439,6 +459,10 @@
   letter-spacing: 0.36em;
 }
 
+.letterPaper .paperHeader {
+  display: none;
+}
+
 .stamp {
   position: absolute;
   top: 54px;
@@ -519,9 +543,9 @@
 .letterPaper {
   position: relative;
   width: 100%;
-  min-height: 680px;
+  aspect-ratio: 0.52;
   margin: 0 auto;
-  padding: 52px 44px 34px;
+  padding: 0;
   background:
     radial-gradient(circle at 20% 18%, rgba(255, 255, 235, 0.58), transparent 26%),
     radial-gradient(circle at 82% 72%, rgba(123, 92, 45, 0.13), transparent 26%),
@@ -534,33 +558,25 @@
 }
 
 .paperBody {
-  height: 560px;
-  display: flex;
-  flex-direction: row-reverse;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 18px;
+  position: absolute;
+  inset: 6.5% 8% 11.5%;
   overflow: hidden;
 }
 
-.paperMeta {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-family: var(--font-letter);
-}
-
 .letterText {
-  height: 100%;
+  position: absolute;
+  top: 3%;
+  right: 4%;
+  left: 18%;
+  bottom: 4%;
   display: flex;
   flex-direction: row-reverse;
   gap: 0;
-  flex: 0 1 auto;
-  max-width: 520px;
   color: #211812;
 }
 
 .letterText p {
-  width: 62px;
+  width: 20%;
   height: 100%;
   margin: 0;
   display: block;
@@ -568,8 +584,8 @@
   text-orientation: mixed;
   text-align: start;
   font-family: var(--font-letter);
-  font-size: 29px;
-  line-height: 62px;
+  font-size: clamp(27px, 4vw, 31px);
+  line-height: 1.18;
   letter-spacing: 0.05em;
   overflow: hidden;
   white-space: nowrap;
@@ -580,18 +596,43 @@
 }
 
 .paperMeta {
+  position: absolute;
+  top: 9%;
+  left: 7%;
   display: flex;
-  gap: 18px;
-  width: 58px;
-  flex: 0 0 58px;
-  padding-top: 26px;
+  flex-direction: row;
+  gap: 14px;
   color: #3f3028;
+  font-family: var(--font-letter);
   font-size: 16px;
-  line-height: 1.8;
+  line-height: 1.55;
+  writing-mode: horizontal-tb;
+}
+
+.verticalText {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.16em;
+  width: 1em;
+  overflow: visible;
+  writing-mode: horizontal-tb;
+  white-space: normal;
+}
+
+.verticalText i {
+  display: block;
+  font-style: normal;
+  line-height: 1;
+  writing-mode: horizontal-tb;
 }
 
 .letterPaper footer {
-  margin-top: 22px;
+  position: absolute;
+  right: 0;
+  bottom: 5.2%;
+  left: 0;
+  margin: 0;
   color: #7a604c;
   font-size: 13px;
   text-align: center;
@@ -606,9 +647,22 @@
   gap: 10px;
 }
 
-.actions button {
+.actions button,
+.actionLink {
   background: rgba(255, 248, 230, 0.84);
   color: #6b1d18;
+}
+
+.actions button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.shareNotice {
+  color: #725f4d;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
 }
 
 @keyframes drift {
@@ -780,8 +834,8 @@
 
   .letterPaper {
     width: min(100%, 360px);
-    min-height: 560px;
-    padding: 38px 18px 24px;
+    min-height: 0;
+    padding: 0;
     overflow: hidden;
     background:
       radial-gradient(circle at 22% 18%, rgba(255, 255, 235, 0.58), transparent 28%),
@@ -793,45 +847,46 @@
   }
 
   .paperBody {
-    height: 470px;
-    gap: 4px;
-    justify-content: center;
-    overflow: hidden;
-    padding-bottom: 0;
+    inset: 6% 6.5% 11.5%;
   }
 
   .letterText {
-    max-width: 264px;
-    flex-shrink: 0;
+    top: 3%;
+    right: 0;
+    left: 23%;
+    bottom: 4%;
+  }
+
+  .letterText p:nth-child(n + 6) {
+    display: none;
   }
 
   .letterText p {
-    width: 44px;
-    font-size: 22px;
-    line-height: 44px;
+    width: 20%;
+    font-size: clamp(22px, 6.7vw, 27px);
+    line-height: 1.18;
     letter-spacing: 0.03em;
   }
 
   .paperMeta {
-    width: 30px;
-    flex-basis: 30px;
-    gap: 8px;
-    padding-top: 18px;
-    font-size: 12px;
-    line-height: 1.6;
+    top: 6%;
+    left: 0;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .verticalText {
+    width: 1em;
   }
 
   .letterPaper footer {
-    margin-top: 12px;
     font-size: 11px;
   }
 
   .actions {
     width: min(100%, 360px);
-  }
-
-  .actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

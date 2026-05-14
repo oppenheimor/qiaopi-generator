@@ -1,0 +1,274 @@
+.shell {
+  min-height: 100vh;
+  padding: 34px clamp(16px, 4vw, 56px) 48px;
+  color: #261d17;
+  background:
+    radial-gradient(circle at 16% 10%, rgba(143, 39, 32, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255, 252, 242, 0.8), rgba(220, 198, 154, 0.42)),
+    #efe2c3;
+}
+
+.hero {
+  width: min(900px, 100%);
+  margin: 0 auto 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.backLink,
+.emptyPanel a {
+  width: fit-content;
+  color: #7d221b;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backLink:hover,
+.emptyPanel a:hover {
+  text-decoration: underline;
+}
+
+.detailStage {
+  width: min(900px, 100%);
+  min-height: 760px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 4vw, 38px);
+  border: 1px solid rgba(87, 62, 38, 0.32);
+  background: rgba(255, 248, 230, 0.78);
+  box-shadow: 0 22px 80px rgba(75, 47, 22, 0.16);
+}
+
+.resultStack {
+  width: min(720px, 100%);
+  display: grid;
+  gap: 18px;
+}
+
+.empty,
+.emptyPanel {
+  color: #725f4d;
+  line-height: 1.7;
+}
+
+.emptyPanel {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  text-align: center;
+}
+
+.letterPaper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 0.52;
+  margin: 0 auto;
+  padding: 0;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 235, 0.58), transparent 26%),
+    radial-gradient(circle at 82% 72%, rgba(123, 92, 45, 0.13), transparent 26%),
+    repeating-linear-gradient(90deg, transparent 0 61px, rgba(158, 71, 55, 0.19) 61px 62px),
+    linear-gradient(180deg, rgba(255, 252, 226, 0.9), rgba(226, 210, 166, 0.9)),
+    #ead9a8;
+  background-origin: border-box, border-box, content-box, border-box;
+  border: 3px solid rgba(128, 35, 29, 0.76);
+  box-shadow: inset 0 0 90px rgba(103, 70, 31, 0.12);
+}
+
+.paperHeader {
+  display: none;
+}
+
+.paperBody {
+  position: absolute;
+  inset: 6.5% 8% 11.5%;
+  overflow: hidden;
+}
+
+.letterText {
+  position: absolute;
+  top: 3%;
+  right: 4%;
+  bottom: 4%;
+  left: 18%;
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 0;
+  color: #211812;
+}
+
+.letterText p {
+  width: 20%;
+  height: 100%;
+  margin: 0;
+  display: block;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  text-align: start;
+  font-family: var(--font-letter);
+  font-size: clamp(27px, 4vw, 31px);
+  line-height: 1.18;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.letterText p:first-child {
+  color: #3b1f19;
+}
+
+.paperMeta {
+  position: absolute;
+  top: 9%;
+  left: 7%;
+  display: flex;
+  flex-direction: row;
+  gap: 14px;
+  color: #3f3028;
+  font-family: var(--font-letter);
+  font-size: 16px;
+  line-height: 1.55;
+  writing-mode: horizontal-tb;
+}
+
+.verticalText {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.16em;
+  width: 1em;
+  overflow: visible;
+  writing-mode: horizontal-tb;
+  white-space: normal;
+}
+
+.verticalText i {
+  display: block;
+  font-style: normal;
+  line-height: 1;
+  writing-mode: horizontal-tb;
+}
+
+.letterPaper footer {
+  position: absolute;
+  right: 0;
+  bottom: 5.2%;
+  left: 0;
+  margin: 0;
+  color: #7a604c;
+  font-size: 13px;
+  text-align: center;
+  white-space: normal;
+}
+
+.actions {
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.actions a,
+.actions button {
+  min-height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #7d221b;
+  border-radius: 0;
+  background: rgba(255, 248, 230, 0.84);
+  color: #6b1d18;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 180ms ease;
+}
+
+.actions a:hover,
+.actions button:hover {
+  background: #5c1814;
+  color: #fff7e7;
+}
+
+.actions button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.shareNotice {
+  color: #725f4d;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .shell {
+    padding: 22px 14px 32px;
+  }
+
+  .detailStage {
+    min-height: auto;
+    padding: 14px;
+  }
+
+  .resultStack,
+  .actions {
+    width: min(100%, 360px);
+  }
+
+  .letterPaper {
+    width: min(100%, 360px);
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 22% 18%, rgba(255, 255, 235, 0.58), transparent 28%),
+      radial-gradient(circle at 82% 72%, rgba(123, 92, 45, 0.13), transparent 26%),
+      repeating-linear-gradient(90deg, transparent 0 43px, rgba(158, 71, 55, 0.18) 43px 44px),
+      linear-gradient(180deg, rgba(255, 252, 226, 0.9), rgba(226, 210, 166, 0.9)),
+      #ead9a8;
+    background-origin: border-box, border-box, content-box, border-box;
+  }
+
+  .paperBody {
+    inset: 6% 6.5% 11.5%;
+  }
+
+  .letterText {
+    top: 3%;
+    right: 0;
+    bottom: 4%;
+    left: 23%;
+  }
+
+  .letterText p:nth-child(n + 6) {
+    display: none;
+  }
+
+  .letterText p {
+    width: 20%;
+    font-size: clamp(22px, 6.7vw, 27px);
+    line-height: 1.18;
+    letter-spacing: 0.03em;
+  }
+
+  .paperMeta {
+    top: 6%;
+    left: 0;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .verticalText {
+    width: 1em;
+  }
+
+  .letterPaper footer {
+    font-size: 11px;
+  }
+}

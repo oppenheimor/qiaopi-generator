@@ -6,7 +6,8 @@ COPY package.json pnpm-lock.yaml ./
 RUN corepack enable && corepack prepare pnpm@9 --activate && pnpm install --frozen-lockfile
 
 COPY . .
-RUN pnpm build
+ENV DATABASE_URL="skip"
+RUN pnpm prisma generate && pnpm build && pnpm prune --prod
 
 # Stage 2: run
 FROM node:20-alpine AS runner
@@ -19,8 +20,10 @@ ENV PORT=3000
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/schema.prisma
 COPY --chown=nextjs:nodejs entrypoint.sh ./entrypoint.sh
 
 RUN chmod +x entrypoint.sh

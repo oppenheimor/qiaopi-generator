@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model GenerationLog {
+  id                 Int      @id @default(autoincrement())
+  requestId          String   @unique
+  source             String
+  model              String?
+  durationMs         Int
+  input              Json
+  result             Json?
+  recipientRelation  String?
+  recipientName      String?
+  senderRelation     String?
+  senderName         String?
+  tone               String?
+  length             String?
+  attachmentType     String?
+  ipAddress          String?
+  userAgent          String?
+  acceptLanguage     String?
+  referer            String?
+  country            String?
+  city               String?
+  error              String?
+  createdAt          DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([source])
+  @@index([recipientRelation])
+  @@index([senderRelation])
+}

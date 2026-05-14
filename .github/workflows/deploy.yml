@@ -50,7 +50,10 @@ jobs:
           command_timeout: 30m
           script: |
             cd /home/deploy/qiaopi-generator
-            echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY_PRODUCTION }}" > .env
+            cat > .env <<'EOF'
+            DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY_PRODUCTION }}
+            DATABASE_URL=${{ secrets.DATABASE_URL_PRODUCTION }}
+            EOF
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f

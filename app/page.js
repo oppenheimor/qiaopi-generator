@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import styles from "./page.module.css";
 
@@ -30,7 +31,7 @@ const initialForm = {
 
 const relationOptions = ["妻", "夫", "母", "父", "子", "女", "兄", "弟", "姊", "妹", "友人", "族親"];
 const toneOptions = ["報平安", "思念", "歉疚", "托付家用", "勸慰", "祝福"];
-const lengthOptions = ["短箋", "普通", "長信"];
+const lengthOptions = ["短箋", "普通"];
 const attachmentTypes = ["家用", "學費", "藥費", "衣物", "米糧", "銀元", "物件", "其他"];
 
 const loadingLines = [
@@ -47,6 +48,7 @@ const loadingLines = [
 ];
 
 const loadingLineDelays = [1800, 2600, 2200, 3400, 2400, 4200, 3000];
+const historyStorageKey = "qiaopi.generatedLetters";
 
 function BrushIcon() {
   return (
@@ -65,6 +67,8 @@ export default function Home() {
   const [phase, setPhase] = useState("form");
   const [letter, setLetter] = useState(null);
   const [error, setError] = useState("");
+  const [shareNotice, setShareNotice] = useState("");
+  const [isSharing, setIsSharing] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(0);
   const resultRef = useRef(null);
 
@@ -109,11 +113,11 @@ export default function Home() {
     }
 
     setError("");
+    setShareNotice("");
     setPhase("loading");
     setLoadingIndex(0);
 
     try {
-      const startedAt = Date.now();
       console.info("[qiaopi] submit generate-letter", {
         phase: "request",
         recipientRelation: form.recipientRelation,
@@ -136,10 +140,8 @@ export default function Home() {
       if (!response.ok) {
         throw new Error(data.error || "生成失敗，請稍後再試。");
       }
-      const elapsed = Date.now() - startedAt;
-      if (elapsed < 1200) {
-        await new Promise((resolve) => window.setTimeout(resolve, 1200 - elapsed));
-      }
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+      saveHistoryEntry(form, data);
       setLetter(data);
       setPhase("envelope");
     } catch (err) {
@@ -148,18 +150,69 @@ export default function Home() {
     }
   }
 
+  function saveHistoryEntry(input, result) {
+    const entry = {
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      form: { ...input },
+      letter: removeDebugData(result),
+    };
+    const nextHistory = [entry, ...readStoredHistory()];
+    persistHistory(nextHistory);
+  }
+
   async function copyText() {
     if (!letter?.plainText) return;
     await navigator.clipboard.writeText(letter.plainText);
   }
 
-  async function downloadImage() {
-    if (!resultRef.current) return;
-    const html2canvas = (await import("html2canvas")).default;
-    const canvas = await html2canvas(resultRef.current, {
-      backgroundColor: "#efe2c3",
-      scale: Math.min(window.devicePixelRatio || 2, 3),
-    });
+  async function shareImage() {
+    if (!resultRef.current || isSharing) return;
+
+    setIsSharing(true);
+    setShareNotice("");
+
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const exportNode = createShareImageNode(resultRef.current);
+      document.body.appendChild(exportNode);
+      let canvas;
+      try {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        canvas = await html2canvas(exportNode, {
+          backgroundColor: "#efe2c3",
+          scale: Math.min(window.devicePixelRatio || 2, 3),
+        });
+      } finally {
+        exportNode.remove();
+      }
+      const file = await canvasToPngFile(canvas, "漂洋過海的信.png");
+      const shareData = {
+        files: [file],
+        title: letter?.shareTitle || letter?.envelope?.title || "一封漂洋過海的信",
+        text: "我用線上銀信局寫了一封漂洋過海的信。",
+      };
+
+      if (navigator.canShare?.({ files: shareData.files })) {
+        await navigator.share(shareData);
+        setShareNotice("已打開分享面板。");
+        return;
+      }
+
+      downloadCanvas(canvas);
+      setShareNotice("此瀏覽器暫不支援直接分享圖片，已改為下載圖片。");
+    } catch (err) {
+      if (err?.name === "AbortError") {
+        setShareNotice("已取消分享。");
+        return;
+      }
+      setShareNotice("分享圖片失敗，請稍後再試。");
+    } finally {
+      setIsSharing(false);
+    }
+  }
+
+  function downloadCanvas(canvas) {
     const link = document.createElement("a");
     link.download = "漂洋過海的信.png";
     link.href = canvas.toDataURL("image/png");
@@ -176,7 +229,7 @@ export default function Home() {
             <p className={styles.lede}>
               把今日說不出口的牽掛，託代筆先生寫成一封繁體侨批家書。紙短情長，伏惟珍重。
             </p>
-            <p className={styles.teamCredit}>“合契”團隊製作</p>
+            <p className={styles.teamCredit}>“合契 AI”團隊製作</p>
           </section>
 
           <section className={styles.formStage}>
@@ -276,11 +329,14 @@ export default function Home() {
                   "正在代筆"
                 ) : (
                   <>
-                    <BrushIcon />
                     <span>請銀信局先生代筆</span>
+                    <BrushIcon />
                   </>
                 )}
               </button>
+              <Link className={styles.historyLink} href="/history">
+                查看生成歷史 →
+              </Link>
             </form>
           </section>
         </>
@@ -304,9 +360,12 @@ export default function Home() {
             <LetterPaper letter={letter} resultRef={resultRef} />
             <div className={styles.actions}>
               <button type="button" onClick={() => setPhase("form")}>重寫資料</button>
-              <button type="button" onClick={copyText}>複製文字</button>
-              <button type="button" onClick={downloadImage}>下載圖片</button>
+              <Link className={styles.actionLink} href="/history">生成歷史</Link>
+              <button type="button" onClick={shareImage} disabled={isSharing}>
+                {isSharing ? "準備分享…" : "分享圖片"}
+              </button>
             </div>
+            {shareNotice ? <p className={styles.shareNotice}>{shareNotice}</p> : null}
           </div>
         </section>
       ) : null}
@@ -447,7 +506,7 @@ function LetterPaper({ letter, resultRef }) {
     ...letter.letter.body,
     letter.letter.postscript,
   ].join("");
-  const columns = splitIntoColumns(letterContent, 15, 6);
+  const columns = splitIntoColumns(letterContent, 18, 5);
 
   return (
     <article ref={resultRef} className={styles.letterPaper}>
@@ -459,12 +518,22 @@ function LetterPaper({ letter, resultRef }) {
           ))}
         </section>
         <aside className={styles.paperMeta}>
-          <span>{letter.letter.signature}</span>
-          <span>{letter.letter.date}</span>
+          <VerticalText text={letter.letter.signature} />
+          <VerticalText text={letter.letter.date} />
         </aside>
       </div>
       <footer>{letter.safetyNote}</footer>
     </article>
+  );
+}
+
+function VerticalText({ text }) {
+  return (
+    <span className={styles.verticalText}>
+      {splitVerticalMarks(text).map((mark, index) => (
+        <i key={`${mark}-${index}`}>{mark}</i>
+      ))}
+    </span>
   );
 }
 
@@ -478,4 +547,68 @@ function splitIntoColumns(text, columnSize, maxColumns) {
     columns.push(cleanText.slice(index, index + columnSize));
   }
   return columns;
+}
+
+function splitVerticalMarks(text) {
+  return String(text || "")
+    .replace(/\s+/g, "")
+    .split("");
+}
+
+function readStoredHistory() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(historyStorageKey) || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((entry) => entry?.id && entry?.letter);
+  } catch {
+    return [];
+  }
+}
+
+function persistHistory(history) {
+  try {
+    localStorage.setItem(historyStorageKey, JSON.stringify(history));
+  } catch {
+    const trimmedHistory = history.slice(0, Math.max(1, history.length - 1));
+    if (trimmedHistory.length === history.length) return;
+    persistHistory(trimmedHistory);
+  }
+}
+
+function canvasToPngFile(canvas, fileName) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("無法生成圖片。"));
+        return;
+      }
+      resolve(new File([blob], fileName, { type: "image/png" }));
+    }, "image/png");
+  });
+}
+
+function createShareImageNode(sourceNode) {
+  const exportWidth = Math.round(
+    window.visualViewport?.width ||
+    window.innerWidth ||
+    document.documentElement.clientWidth ||
+    sourceNode.getBoundingClientRect().width
+  );
+  const clone = sourceNode.cloneNode(true);
+
+  clone.style.position = "fixed";
+  clone.style.left = "-10000px";
+  clone.style.top = "0";
+  clone.style.width = `${exportWidth}px`;
+  clone.style.maxWidth = "none";
+  clone.style.margin = "0";
+  clone.style.boxSizing = "border-box";
+
+  return clone;
+}
+
+function removeDebugData(letter) {
+  const rest = { ...(letter || {}) };
+  delete rest._debug;
+  return rest;
 }

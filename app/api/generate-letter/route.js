@@ -1,10 +1,14 @@
+import prisma from "@/lib/prisma";
+
 export const runtime = "nodejs";
 
 const requiredFields = ["recipientRelation", "recipientName", "senderRelation", "senderName", "message"];
+const modelName = "deepseek-v4-flash";
 
 export async function POST(request) {
   const requestId = crypto.randomUUID();
   const startedAt = Date.now();
+  const identity = extractRequestIdentity(request);
   let input;
   try {
     input = await request.json();
@@ -15,8 +19,7 @@ export async function POST(request) {
 
   console.info("[qiaopi:generate-letter]", requestId, "request", {
     hasApiKey: Boolean(process.env.DEEPSEEK_API_KEY),
-    // model: "deepseek-v4-pro",
-    model: "deepseek-v4-flash",
+    model: modelName,
     recipientRelation: input?.recipientRelation,
     senderRelation: input?.senderRelation,
     tone: input?.tone,
@@ -31,14 +34,25 @@ export async function POST(request) {
   }
 
   if (!process.env.DEEPSEEK_API_KEY) {
+    const letter = createFallbackLetter(input);
+    const durationMs = Date.now() - startedAt;
     console.warn("[qiaopi:generate-letter]", requestId, "fallback:no-api-key", {
-      durationMs: Date.now() - startedAt,
+      durationMs,
     });
-    return Response.json(withDebug(createFallbackLetter(input), {
+    await recordGenerationLog({
+      requestId,
+      input,
+      result: letter,
+      source: "fallback:no-api-key",
+      model: null,
+      durationMs,
+      identity,
+    });
+    return Response.json(withDebug(letter, {
       requestId,
       source: "fallback:no-api-key",
       hasApiKey: false,
-      durationMs: Date.now() - startedAt,
+      durationMs,
     }));
   }
 
@@ -51,8 +65,7 @@ export async function POST(request) {
         Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
-        // model: "deepseek-v4-pro",
-        model: "deepseek-v4-flash",
+        model: modelName,
         thinking: { type: "enabled" },
         reasoning_effort: "high",
         stream: false,
@@ -73,6 +86,16 @@ export async function POST(request) {
       errorMessage: payload?.error?.message,
     });
     if (!response.ok) {
+      await recordGenerationLog({
+        requestId,
+        input,
+        result: null,
+        source: "deepseek:error",
+        model: modelName,
+        durationMs: Date.now() - startedAt,
+        identity,
+        error: payload?.error?.message || "DeepSeek API 调用失败。",
+      });
       return Response.json(
         { error: payload?.error?.message || "DeepSeek API 调用失败。" },
         { status: 502 },
@@ -84,14 +107,35 @@ export async function POST(request) {
       contentLength: rawContent?.length || 0,
     });
     const generated = JSON.parse(rawContent);
-    return Response.json(withDebug(sanitizeGeneratedLetter(generated, input), {
+    const letter = sanitizeGeneratedLetter(generated, input);
+    const durationMs = Date.now() - startedAt;
+    await recordGenerationLog({
+      requestId,
+      input,
+      result: letter,
+      source: "deepseek",
+      model: modelName,
+      durationMs,
+      identity,
+    });
+    return Response.json(withDebug(letter, {
       requestId,
       source: "deepseek",
       hasApiKey: true,
       status: response.status,
-      durationMs: Date.now() - startedAt,
+      durationMs,
     }));
   } catch (error) {
+    await recordGenerationLog({
+      requestId,
+      input,
+      result: null,
+      source: "error",
+      model: modelName,
+      durationMs: Date.now() - startedAt,
+      identity,
+      error: error?.message || "生成失败，请稍后再试。",
+    });
     console.error("[qiaopi:generate-letter]", requestId, "error", {
       message: error?.message,
       durationMs: Date.now() - startedAt,
@@ -100,6 +144,56 @@ export async function POST(request) {
       { error: error?.message || "生成失败，请稍后再试。" },
       { status: 500 },
     );
+  }
+}
+
+function extractRequestIdentity(request) {
+  const headers = request.headers;
+  return {
+    ipAddress: firstHeaderValue(headers.get("x-forwarded-for")) || headers.get("x-real-ip") || headers.get("cf-connecting-ip"),
+    userAgent: headers.get("user-agent"),
+    acceptLanguage: headers.get("accept-language"),
+    referer: headers.get("referer"),
+    country: headers.get("x-vercel-ip-country") || headers.get("cf-ipcountry"),
+    city: headers.get("x-vercel-ip-city"),
+  };
+}
+
+function firstHeaderValue(value) {
+  return value?.split(",")?.[0]?.trim() || null;
+}
+
+async function recordGenerationLog({ requestId, input, result, source, model, durationMs, identity, error }) {
+  try {
+    const data = normalizeInput(input);
+    await prisma.generationLog.create({
+      data: {
+        requestId,
+        source,
+        model,
+        durationMs,
+        input: data,
+        result,
+        recipientRelation: data.recipientRelation,
+        recipientName: data.recipientName,
+        senderRelation: data.senderRelation,
+        senderName: data.senderName,
+        tone: data.tone,
+        length: data.length,
+        attachmentType: data.attachmentType,
+        ipAddress: identity.ipAddress,
+        userAgent: identity.userAgent,
+        acceptLanguage: identity.acceptLanguage,
+        referer: identity.referer,
+        country: identity.country,
+        city: identity.city,
+        error,
+      },
+    });
+  } catch (logError) {
+    console.error("[qiaopi:generate-letter]", requestId, "log-error", {
+      message: logError?.message,
+    });
   }
 }
 
