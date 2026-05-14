@@ -42,12 +42,12 @@ jobs:
 
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1
-        timeout-minutes: 30
+        timeout-minutes: 60
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          command_timeout: 30m
+          command_timeout: 60m
           script: |
             cd /home/deploy/qiaopi-generator
             cat > .env <<'EOF'
