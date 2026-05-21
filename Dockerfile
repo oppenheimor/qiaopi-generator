@@ -1,8 +1,10 @@
 # Stage 1: build
-FROM node:20-alpine AS builder
+FROM m.daocloud.io/docker.io/library/node:20-alpine AS builder
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
+ENV COREPACK_NPM_REGISTRY=https://registry.npmmirror.com
+ENV npm_config_registry=https://registry.npmmirror.com
 RUN corepack enable && corepack prepare pnpm@9 --activate && pnpm install --frozen-lockfile
 
 COPY . .
@@ -10,7 +12,7 @@ ENV DATABASE_URL="skip"
 RUN pnpm prisma generate && pnpm build && pnpm prune --prod
 
 # Stage 2: run
-FROM node:20-alpine AS runner
+FROM m.daocloud.io/docker.io/library/node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
