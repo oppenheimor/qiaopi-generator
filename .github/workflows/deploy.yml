@@ -43,16 +43,22 @@ jobs:
           ssh -i ~/.ssh/deploy_key '${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}' 'mkdir -p /home/deploy/qiaopi-generator'
           scp -i ~/.ssh/deploy_key docker-compose.yml '${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/deploy/qiaopi-generator/docker-compose.yml'
 
+      - name: Upload env file
+        run: |
+          cat > .env.production <<'EOF'
+          DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY_PRODUCTION }}
+          DATABASE_URL=${{ secrets.DATABASE_URL_PRODUCTION }}
+          EOF
+          sed -i 's/^          //' .env.production
+          scp -i ~/.ssh/deploy_key .env.production '${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/deploy/qiaopi-generator/.env'
+          rm -f .env.production
+
       - name: Deploy to Server
         timeout-minutes: 60
         run: |
           ssh -i ~/.ssh/deploy_key '${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}' <<'REMOTE'
             cd /home/deploy/qiaopi-generator
             printf '%s' '${{ secrets.VOLCENGINE_CR_PASSWORD }}' | docker login ${{ env.REGISTRY }} -u '${{ secrets.VOLCENGINE_CR_USERNAME }}' --password-stdin
-            cat > .env <<'EOF'
-            DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY_PRODUCTION }}
-            DATABASE_URL=${{ secrets.DATABASE_URL_PRODUCTION }}
-            EOF
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
