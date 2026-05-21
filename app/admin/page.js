@@ -4,6 +4,7 @@ import styles from "./page.module.css";
 export const dynamic = "force-dynamic";
 
 const pageSize = 20;
+const adminDisplayTimeOffsetMs = 8 * 60 * 60 * 1000;
 
 export const metadata = {
   title: "侨批生成统计",
@@ -139,11 +140,13 @@ function StatCard({ label, value }) {
 }
 
 function formatDate(date) {
+  const displayDate = new Date(date.getTime() + adminDisplayTimeOffsetMs);
+
   return new Intl.DateTimeFormat("zh-CN", {
     dateStyle: "short",
     timeStyle: "medium",
     hour12: false,
-  }).format(date);
+  }).format(displayDate);
 }
 
 function sourceClassName(source) {
