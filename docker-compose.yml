@@ -1,10 +1,15 @@
 services:
   nextjs:
     image: splice-ai-cn-shanghai.cr.volces.com/splice-ai/qiaopi-generator-nextjs:latest
-    ports:
-      - "3000:3000"
+    container_name: qiaopi-generator-nextjs
+    restart: always
+    networks:
+      - app-network
     env_file:
       - .env
     environment:
       - NODE_ENV=production
-    restart: unless-stopped
+
+networks:
+  app-network:
+    external: true

@@ -45,7 +45,7 @@ export default async function AdminPage({ searchParams }) {
           <table>
             <thead>
               <tr>
-                <th>时间1</th>
+                <th>时间</th>
                 <th>来源</th>
                 <th>耗时</th>
                 <th>用户输入</th>
@@ -84,7 +84,7 @@ export default async function AdminPage({ searchParams }) {
                   </td>
                   <td>
                     <div className={styles.identityBlock}>
-                      <span>{log.ipAddress || "IP 未记录"}</span>
+                      <span>{log.ipAddress || "IP - 未记录"}</span>
                       <span>{[log.country, log.city].filter(Boolean).join(" / ") || "地区未记录"}</span>
                       <span>{log.acceptLanguage || "语言未记录"}</span>
                       <span title={log.userAgent || ""}>{log.userAgent || "UA 未记录"}</span>
