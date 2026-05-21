@@ -45,7 +45,7 @@ export default async function AdminPage({ searchParams }) {
           <table>
             <thead>
               <tr>
-                <th>时间</th>
+                <th>时间1</th>
                 <th>来源</th>
                 <th>耗时</th>
                 <th>用户输入</th>

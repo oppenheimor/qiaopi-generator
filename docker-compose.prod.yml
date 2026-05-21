@@ -1,6 +1,6 @@
 services:
   nextjs:
-    image: ghcr.io/oppenheimor/qiaopi-generator-nextjs:latest
+    image: splice-ai-cn-shanghai.cr.volces.com/splice-ai/qiaopi-generator-nextjs:latest
     container_name: qiaopi-generator-nextjs
     restart: always
     networks:

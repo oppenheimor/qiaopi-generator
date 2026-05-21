@@ -1,6 +1,6 @@
 services:
   nextjs:
-    build: .
+    image: splice-ai-cn-shanghai.cr.volces.com/splice-ai/qiaopi-generator-nextjs:latest
     ports:
       - "3000:3000"
     env_file:
