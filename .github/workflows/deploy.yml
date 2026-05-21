@@ -10,7 +10,7 @@ env:
 
 jobs:
   build-and-deploy:
-    runs-on: [self-hosted, linux, x64, volcengine]
+    runs-on: self-hosted
     permissions:
       contents: read
 
